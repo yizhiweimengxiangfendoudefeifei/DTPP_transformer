@@ -191,15 +191,15 @@ class DataProcessor(object):
 
     def plot_scenario(self, data):
         # Create map layers
-        create_map_raster(data['lanes'], data['crosswalks'], data['route_lanes'])
+        # create_map_raster(data['lanes'], data['crosswalks'], data['route_lanes'])
 
         # Create agent layers
         create_ego_raster(data['ego_agent_past'][-1])
         create_agents_raster(data['neighbor_agents_past'][:, -1])
 
         # Draw past and future trajectories
-        draw_trajectory(data['ego_agent_past'], data['neighbor_agents_past'][:1])
-        draw_trajectory(data['ego_agent_future'], data['neighbor_agents_future'][:1])
+        draw_trajectory(data['ego_agent_past'], data['neighbor_agents_past'][:])
+        draw_trajectory(data['ego_agent_future'], data['neighbor_agents_future'][:])
 
         # Draw candidate trajectories
         draw_plans(data['first_stage_ego_trajectory'], 1)
@@ -241,6 +241,7 @@ class DataProcessor(object):
                 continue
 
             # check if the candidate trajectories are valid
+            # print("ego_agent_future.shape:", ego_agent_future.shape) 80*3
             expert_error_1 = np.linalg.norm(ego_agent_future[None, self.first_stage_horizon*10-1, :2] 
                                             - first_stage_trajs[:, -1, :2], axis=-1)
             expert_error_2 = np.linalg.norm(ego_agent_future[None, self.future_time_horizon*10-1, :2] 
@@ -253,9 +254,15 @@ class DataProcessor(object):
             second_stage_trajs = second_stage_trajs[np.argsort(expert_error_2)]            
 
             # gather data
-            data = {"map_name": map_name, "token": token, "ego_agent_past": ego_agent_past, "ego_agent_future": ego_agent_future, 
-                    "first_stage_ego_trajectory": first_stage_trajs, "second_stage_ego_trajectory": second_stage_trajs,
-                    "neighbor_agents_past": neighbor_agents_past, "neighbor_agents_future": neighbor_agents_future}
+            data = {
+                "map_name": map_name, 
+                "token": token, 
+                "ego_agent_past": ego_agent_past, 
+                "ego_agent_future": ego_agent_future, 
+                "first_stage_ego_trajectory": first_stage_trajs, 
+                "second_stage_ego_trajectory": second_stage_trajs,
+                "neighbor_agents_past": neighbor_agents_past, 
+                "neighbor_agents_future": neighbor_agents_future}
             data.update(vector_map)
 
             # visualization

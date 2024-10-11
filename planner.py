@@ -58,6 +58,7 @@ class Planner(AbstractPlanner):
             edge.id for block in self._route_roadblocks if block for edge in block.interior_edges
         ]
 
+    # 子类实现计算轨迹的方法
     def compute_planner_trajectory(self, current_input: PlannerInput):
         # Extract iteration, history, and traffic light
         iteration = current_input.iteration.index
@@ -95,7 +96,7 @@ class Planner(AbstractPlanner):
         # Tree policy planner
         try:
             plan = self._trajectory_planner.plan(iteration, ego_state, features, starting_block, self._route_roadblocks, 
-                                             self._candidate_lane_edge_ids, traffic_light_lanes, observation)
+                                             self._candidate_lane_edge_ids, traffic_light_lanes, observation, False)
         except Exception as e:
             print("Error in planning")
             print(e)

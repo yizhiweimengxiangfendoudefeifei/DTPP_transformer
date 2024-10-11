@@ -484,3 +484,6 @@ class TreePlanner:
         plt.gca().axes.get_xaxis().set_visible(False)
         plt.gca().axis([-50, 50, -50, 50])
         plt.show()
+        # file_name = 'result/output_' + str(iteration) + '.png'
+        # plt.savefig(file_name)
+        # plt.close()

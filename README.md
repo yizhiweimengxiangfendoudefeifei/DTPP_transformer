@@ -38,7 +38,8 @@ Before training the DTPP model, you need to preprocess the raw data from nuPlan 
 python data_process.py \
 --data_path /home/hope/nuplan/dataset/nuplan-v1.1/splits/mini \
 --map_path /home/hope/nuplan/dataset/maps \
---save_path /home/hope/nuplan/processed_data
+--save_path /home/hope/nuplan/processed_data \
+--debug
 ```
 Three arguments are mandatory: ```--data_path``` to specify the path to the stored nuPlan dataset, ```--map_path``` to specify the path to the nuPlan map data, and ```--save_path``` to specify the path to save the processed data. Optionally, limit the number of scenarios with ```--total_scenarios``` argument.
 
@@ -46,8 +47,8 @@ Three arguments are mandatory: ```--data_path``` to specify the path to the stor
 To train the DTPP model, run:
 ```
 python train.py \
---train_set nuplan/processed_data/train \
---valid_set nuplan/processed_data/valid
+--train_set /home/hope/nuplan/processed_data/train \
+--valid_set /home/hope/nuplan/processed_data/valid
 ```
 Two arguments are mandatory: ```--train_set``` to specify the path to the processed training data and ```--valid_set``` to specify the path to the processed validation data.
 
@@ -58,9 +59,9 @@ To test the DTPP planning framework in nuPlan simulation scenarios, use:
 ```
 python test.py \
 --test_type closed_loop_nonreactive_agents \
---data_path nuplan/dataset/nuplan-v1.1/splits/test \
---map_path nuplan/dataset/maps \
---model_path base_model.pth \
+--data_path /home/hope/nuplan/dataset/nuplan-v1.1/splits/mini \
+--map_path /home/hope/nuplan/dataset/maps \
+--model_path training_log/DTPP_training/model_epoch_25_valADE_1.6006.pth \
 --load_test_set
 ```
 Choose one of the three options ('open_loop_boxes', 'closed_loop_nonreactive_agents', 'closed_loop_reactive_agents') for ```--test_type```, and specify the path to your trained model ```--model_path```. Ensure to provide ```--data_path``` and ```--map_path``` arguments as done in the data process step. Use ```--load_test_set``` and ```--model_path base_model.pth``` to test the performance of the base pre-trained model on selected testing scenarios.

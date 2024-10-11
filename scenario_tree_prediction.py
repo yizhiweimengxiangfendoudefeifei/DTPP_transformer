@@ -24,6 +24,7 @@ class Encoder(nn.Module):
         actors = torch.cat([ego[:, None, :, :5], neighbors[..., :5]], dim=1)
 
         # agent encoding
+        # lstm
         encoded_ego = self.ego_encoder(ego)
         encoded_neighbors = [self.agent_encoder(neighbors[:, i]) for i in range(neighbors.shape[1])]
         encoded_actors = torch.stack([encoded_ego] + encoded_neighbors, dim=1)
@@ -40,7 +41,7 @@ class Encoder(nn.Module):
         # attention fusion encoding
         input = torch.cat([encoded_actors, encoded_map_lanes, encoded_map_crosswalks], dim=1)
         mask = torch.cat([actors_mask, lanes_mask, crosswalks_mask], dim=1)
-        encoding = self.fusion_encoder(input, src_key_padding_mask=mask)
+        encoding = self.fusion_encoder(input, src_key_padding_mask=mask)# 16*236*256
 
         # outputs
         encoder_outputs = {'encoding': encoding, 'mask': mask}
@@ -69,7 +70,7 @@ class Decoder(nn.Module):
     def pooling_trajectory(self, trajectory_tree):
         B, M, T, D = trajectory_tree.shape
         trajectory_tree = torch.reshape(trajectory_tree, (B, M, T//10, 10, D))
-        trajectory_tree = torch.max(trajectory_tree, dim=-2)[0]
+        trajectory_tree = torch.max(trajectory_tree, dim=-2)[0]# 最大池化，选取倒数第二个维度的最大值
 
         return trajectory_tree
 
@@ -86,14 +87,14 @@ class Decoder(nn.Module):
         current_states = agents_states[:, :self._neighbors, -1]
         encoding, encoding_mask = encoder_outputs['encoding'], encoder_outputs['mask']
         ego_traj_ori_encoding = self.ego_traj_encoder(ego_traj_inputs)
-        branch_embedding = ego_traj_ori_encoding[:, :, timesteps-1]
+        branch_embedding = ego_traj_ori_encoding[:, :, timesteps-1]# traj encoder的最后一个输出作为branch_embedding
         ego_traj_ori_encoding = self.pooling_trajectory(ego_traj_ori_encoding)
         time_embedding = self.time_embed(self.time_index)
         tree_embedding = time_embedding[None, :, :, :] + branch_embedding[:, :, None, :]
 
         # get mask
         ego_traj_mask = torch.ne(ego_traj_inputs.sum(-1), 0)
-        ego_traj_mask = ego_traj_mask[:, :, ::(ego_traj_mask.shape[-1]//self._time)]
+        ego_traj_mask = ego_traj_mask[:, :, ::(ego_traj_mask.shape[-1]//self._time)]# ::每隔一定步长切片
         ego_traj_mask = torch.reshape(ego_traj_mask, (ego_traj_mask.shape[0], -1))
         env_mask = torch.einsum('ij,ik->ijk', ego_traj_mask, encoding_mask.logical_not())
         env_mask = torch.where(env_mask == 1, 0, -1e9)
